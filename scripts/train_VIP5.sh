@@ -2,14 +2,16 @@
 # Memory-optimized version with fp16 and gradient accumulation
 #
 # Environment variables for customization:
-#   BATCH_SIZE=8      - per-GPU batch size (default: 8)
-#   GRAD_ACCUM=4      - gradient accumulation steps (default: 4)
-#   MAX_TEXT_LEN=512  - max sequence length (default: 512)
+#   BATCH_SIZE=4      - per-GPU batch size (default: 4, reduce if OOM)
+#   GRAD_ACCUM=8      - gradient accumulation steps (default: 8)
+#   MAX_TEXT_LEN=256  - max sequence length (default: 256)
 #   USE_FP16=1        - enable fp16 (default: 1, set to 0 to disable)
 #   LR=5e-4           - learning rate (default: 5e-4 for fp16, 1e-3 for fp32)
 #
 # Example without fp16 (if NaN issues persist):
-#   USE_FP16=0 LR=1e-3 BATCH_SIZE=4 bash scripts/train_VIP5.sh ...
+#   USE_FP16=0 LR=1e-3 BATCH_SIZE=2 bash scripts/train_VIP5.sh ...
+#
+# If still OOM, try: BATCH_SIZE=2 GRAD_ACCUM=16 MAX_TEXT_LEN=128
 
 #!/bin/bash
 
@@ -21,10 +23,10 @@ output=snap/$name
 
 # Memory optimization: Use smaller batch size with gradient accumulation
 # Effective batch size = batch_size * gradient_accumulation_steps * num_gpus
-# With batch_size=8, grad_accum=4, 7 GPUs: effective = 8 * 4 * 7 = 224 (similar to 36 * 7 = 252)
-BATCH_SIZE=${BATCH_SIZE:-8}
-GRAD_ACCUM=${GRAD_ACCUM:-4}
-MAX_TEXT_LEN=${MAX_TEXT_LEN:-512}
+# With batch_size=4, grad_accum=8, 4 GPUs: effective = 4 * 8 * 4 = 128
+BATCH_SIZE=${BATCH_SIZE:-4}
+GRAD_ACCUM=${GRAD_ACCUM:-8}
+MAX_TEXT_LEN=${MAX_TEXT_LEN:-256}
 USE_FP16=${USE_FP16:-1}
 
 # Lower learning rate for fp16 to avoid numerical instability
