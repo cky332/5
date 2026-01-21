@@ -38,6 +38,18 @@ fi
 
 echo "Training config: BATCH_SIZE=$BATCH_SIZE, GRAD_ACCUM=$GRAD_ACCUM, LR=$LR, FP16=$USE_FP16"
 
+# Validate GPU setup
+NUM_GPUS=$1
+VISIBLE_GPUS=$(python -c "import torch; print(torch.cuda.device_count())" 2>/dev/null || echo "0")
+echo "Requested GPUs: $NUM_GPUS, Visible GPUs: $VISIBLE_GPUS"
+
+if [ "$VISIBLE_GPUS" -lt "$NUM_GPUS" ]; then
+    echo "ERROR: Requested $NUM_GPUS GPUs but only $VISIBLE_GPUS are visible!"
+    echo "Check your CUDA_VISIBLE_DEVICES setting."
+    echo "Current CUDA_VISIBLE_DEVICES: $CUDA_VISIBLE_DEVICES"
+    exit 1
+fi
+
 PYTHONPATH=$PYTHONPATH:./src \
 python -m torch.distributed.launch \
     --nproc_per_node=$1 \

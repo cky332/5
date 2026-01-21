@@ -362,7 +362,17 @@ class Trainer(TrainerBase):
 def main_worker(gpu, args):
     args.gpu = gpu
     args.rank = gpu
-    print(f'Process Launching at GPU {gpu}')
+
+    # Validate GPU availability
+    num_gpus = torch.cuda.device_count()
+    if gpu >= num_gpus:
+        raise RuntimeError(
+            f"GPU {gpu} requested but only {num_gpus} GPUs are visible. "
+            f"Check CUDA_VISIBLE_DEVICES setting. "
+            f"Available GPUs: {list(range(num_gpus))}"
+        )
+
+    print(f'Process Launching at GPU {gpu} (Total visible: {num_gpus})')
 
     if args.distributed:
         torch.cuda.set_device(args.gpu)
