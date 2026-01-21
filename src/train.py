@@ -203,6 +203,10 @@ class Trainer(TrainerBase):
 
                     global_step += 1
 
+                    # Clear CUDA cache periodically to avoid memory fragmentation
+                    if global_step % 100 == 0:
+                        torch.cuda.empty_cache()
+
                 if self.lr_scheduler:
                     if version.parse(torch.__version__) >= version.parse("1.4"):
                         lr = self.lr_scheduler.get_last_lr()[0]
