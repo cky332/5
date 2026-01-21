@@ -1,0 +1,136 @@
+# 对抗攻击实验配置
+# Adversarial Attack Experiment Configuration
+
+# 攻击方法配置
+attacks:
+  # 迁移攻击
+  transfer:
+    epsilon: [0.015686, 0.031373, 0.062745]  # 4/255, 8/255, 16/255
+    step_size: 0.007843  # 2/255
+    num_iterations: 100
+    momentum: 1.0
+    diversity_prob: 0.5
+    surrogate_models:
+      - ViT-B/32
+      - ViT-B/16
+      - ViT-L/14
+      - RN50
+      - RN101
+
+  ensemble_transfer:
+    epsilon: 0.031373  # 8/255
+    num_iterations: 100
+    use_scale_invariant: true
+    num_scale_copies: 5
+    use_translation_invariant: true
+
+  feature_collision:
+    epsilon: 0.031373
+    num_iterations: 100
+    target_layer: transformer.resblocks.11
+
+  # 查询攻击
+  nes:
+    epsilon: 0.031373
+    max_queries: [1000, 5000, 10000]
+    sigma: 0.001
+    learning_rate: 0.01
+    num_samples: 50
+    antithetic: true
+
+  simba:
+    epsilon: 0.031373
+    max_queries: 10000
+    step_size: 0.02
+    use_dct: true
+    freq_dims: 28
+
+  square:
+    epsilon: 0.031373
+    max_queries: 10000
+    p_init: 0.8
+
+  boundary:
+    epsilon: 0.031373
+    max_queries: 10000
+    initial_delta: 0.1
+    orthogonal_step: 0.01
+    source_step: 0.01
+
+  # 语义攻击
+  semantic:
+    epsilon: 0.031373
+    num_iterations: 100
+    positive_templates:
+      - "a high quality product photo"
+      - "a best seller product"
+      - "a highly recommended item"
+      - "a premium quality product"
+      - "a popular trending product"
+    target_attributes:
+      - quality
+      - popularity
+      - value
+      - aesthetics
+
+# 数据集配置
+datasets:
+  toys:
+    data_path: data/toys
+    feature_path: features/toys
+    num_items: 11924
+    num_users: 19412
+
+  beauty:
+    data_path: data/beauty
+    feature_path: features/beauty
+    num_items: 12101
+    num_users: 22363
+
+  sports:
+    data_path: data/sports
+    feature_path: features/sports
+    num_items: 18357
+    num_users: 35598
+
+  clothing:
+    data_path: data/clothing
+    feature_path: features/clothing
+    num_items: 23033
+    num_users: 39387
+
+# 评估配置
+evaluation:
+  target_ranks: [1, 5, 10, 20, 50]
+
+  metrics:
+    - attack_success_rate
+    - avg_rank_improvement
+    - median_rank_improvement
+    - top_k_success_rate
+    - perturbation_linf
+    - perturbation_l2
+    - ssim
+    - lpips
+    - num_queries
+
+  defenses:
+    - jpeg_compression
+    - gaussian_blur
+    - median_filter
+    - bit_depth_reduction
+    - random_resize
+
+# 实验配置
+experiment:
+  num_samples: 1000
+  seed: 42
+  device: cuda
+  save_adversarial_images: false
+  output_format: [json, txt, csv]
+
+# 日志配置
+logging:
+  level: INFO
+  save_dir: logs/
+  tensorboard: true
