@@ -24,7 +24,7 @@ python -m torch.distributed.launch \
         --num_workers 4 \
         --clip_grad_norm 5.0 \
         --losses 'sequential,direct,explanation' \
-        --backbone 't5-small' \
+        --backbone '/home/mlsnrs/.cache/huggingface/hub/t5-base' \
         --output $output \
         --epoch $7 \
         --use_adapter \
