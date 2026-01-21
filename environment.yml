@@ -1,0 +1,23 @@
+name: vip5
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - pytorch=1.12.0
+  - torchvision=0.13.0
+  - torchaudio=0.12.0
+  - pytorch-cuda=11.6
+  - numpy
+  - tqdm
+  - pyyaml
+  - pip
+  - pip:
+    - transformers
+    - sentencepiece
+    - packaging
+    - ftfy
+    - regex
+    - git+https://github.com/openai/CLIP.git
