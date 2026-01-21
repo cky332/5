@@ -43,7 +43,8 @@ class VIP5Tuning(VIP5):
 
         loss = loss.view(B, L) * lm_mask
 
-        loss = loss.sum(dim=1) / lm_mask.sum(dim=1).clamp(min=1)
+        # Use float32 for loss computation to avoid fp16 numerical issues
+        loss = loss.float().sum(dim=1) / lm_mask.sum(dim=1).clamp(min=1)
 
         task_counts = {task: 0 for task in self.losses}
         task_loss = {task: 0 for task in self.losses}
@@ -102,7 +103,8 @@ class VIP5Tuning(VIP5):
 
         loss = loss.view(B, L) * lm_mask
 
-        loss = loss.sum(dim=1) / lm_mask.sum(dim=1).clamp(min=1)
+        # Use float32 for loss computation to avoid fp16 numerical issues
+        loss = loss.float().sum(dim=1) / lm_mask.sum(dim=1).clamp(min=1)
 
         results = {}
 

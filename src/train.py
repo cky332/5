@@ -156,12 +156,19 @@ class Trainer(TrainerBase):
 
                 loss = results['loss']
 
-                # Scale loss for gradient accumulation
+                # Scale loss for gradient accumulation (use float32 to avoid fp16 underflow)
                 if grad_accum_steps > 1:
-                    loss = loss / grad_accum_steps
+                    loss = loss.float() / grad_accum_steps
 
                 if self.args.fp16 and _use_native_amp:
                     self.scaler.scale(loss).backward()
+                    # Check for NaN/Inf and skip if needed
+                    if torch.isnan(loss) or torch.isinf(loss):
+                        print(f"Warning: NaN/Inf loss detected at step {step_i}, skipping...")
+                        self.scaler.update()
+                        for param in self.model.parameters():
+                            param.grad = None
+                        continue
                 elif self.args.fp16 and _use_apex:
                     with amp.scale_loss(loss, self.optim) as scaled_loss:
                         scaled_loss.backward()
