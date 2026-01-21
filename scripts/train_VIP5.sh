@@ -1,5 +1,15 @@
 # Run with $ CUDA_VISIBLE_DEVICES=0,1,2,3 bash scripts/train_VIP5.sh 4 [toys, clothing, beauty, sports] 13579 vitb32 2 8 20
 # Memory-optimized version with fp16 and gradient accumulation
+#
+# Environment variables for customization:
+#   BATCH_SIZE=8      - per-GPU batch size (default: 8)
+#   GRAD_ACCUM=4      - gradient accumulation steps (default: 4)
+#   MAX_TEXT_LEN=512  - max sequence length (default: 512)
+#   USE_FP16=1        - enable fp16 (default: 1, set to 0 to disable)
+#   LR=5e-4           - learning rate (default: 5e-4 for fp16, 1e-3 for fp32)
+#
+# Example without fp16 (if NaN issues persist):
+#   USE_FP16=0 LR=1e-3 BATCH_SIZE=4 bash scripts/train_VIP5.sh ...
 
 #!/bin/bash
 
@@ -15,6 +25,18 @@ output=snap/$name
 BATCH_SIZE=${BATCH_SIZE:-8}
 GRAD_ACCUM=${GRAD_ACCUM:-4}
 MAX_TEXT_LEN=${MAX_TEXT_LEN:-512}
+USE_FP16=${USE_FP16:-1}
+
+# Lower learning rate for fp16 to avoid numerical instability
+if [ "$USE_FP16" = "1" ]; then
+    LR=${LR:-5e-4}
+    FP16_FLAG="--fp16"
+else
+    LR=${LR:-1e-3}
+    FP16_FLAG=""
+fi
+
+echo "Training config: BATCH_SIZE=$BATCH_SIZE, GRAD_ACCUM=$GRAD_ACCUM, LR=$LR, FP16=$USE_FP16"
 
 PYTHONPATH=$PYTHONPATH:./src \
 python -m torch.distributed.launch \
@@ -29,9 +51,9 @@ python -m torch.distributed.launch \
         --gradient_accumulation_steps $GRAD_ACCUM \
         --optim adamw \
         --warmup_ratio 0.1 \
-        --lr 1e-3 \
+        --lr $LR \
         --num_workers 4 \
-        --clip_grad_norm 5.0 \
+        --clip_grad_norm 1.0 \
         --losses 'sequential,direct,explanation' \
         --backbone '/home/mlsnrs/.cache/huggingface/hub/t5-base' \
         --output $output \
@@ -46,4 +68,4 @@ python -m torch.distributed.launch \
         --image_feature_size_ratio $img_feat_size_ratio \
         --whole_word_embed \
         --category_embed \
-        --fp16 2>&1 | tee log/$name.log
+        $FP16_FLAG 2>&1 | tee log/$name.log
