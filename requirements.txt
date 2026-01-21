@@ -4,7 +4,8 @@
 # ============================================================
 # IMPORTANT VERSION NOTES:
 # - PyTorch 1.12.x is required (NOT 2.x)
-# - transformers must be <4.30.0 (newer versions break imports)
+# - transformers must be <4.18.0 (4.18+ renamed internal T5 classes)
+# - Recommended: transformers==4.16.2
 # ============================================================
 
 # PyTorch (install FIRST, separately based on your CUDA version)
@@ -23,10 +24,11 @@ torch==1.12.0
 torchvision==0.13.0
 
 # NLP and Transformers
-# CRITICAL: transformers>=4.30 breaks this codebase (GenerationMixin import changed)
-transformers>=4.21.0,<4.30.0
+# CRITICAL: transformers>=4.18 renamed T5DenseReluDense, breaking this codebase
+# Use exactly 4.16.2 for best compatibility
+transformers==4.16.2
 sentencepiece>=0.1.96
-tokenizers>=0.12.0,<0.14.0
+tokenizers>=0.10.0,<0.12.0
 
 # OpenAI CLIP
 git+https://github.com/openai/CLIP.git
