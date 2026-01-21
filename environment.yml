@@ -9,20 +9,16 @@ dependencies:
   - python=3.9
 
   # PyTorch and related packages
+  # NOTE: PyTorch 1.12 is required for compatibility with this codebase
   - pytorch=1.12.0
   - torchvision=0.13.0
   - torchaudio=0.12.0
   - cudatoolkit=11.3
 
   # Core scientific packages
-  - numpy>=1.21.0
+  - numpy>=1.21.0,<1.24.0
   - scipy>=1.7.0
   - scikit-learn>=1.0.0
-
-  # NLP and ML packages
-  - transformers>=4.20.0
-  - sentencepiece>=0.1.96
-  - tokenizers>=0.12.0
 
   # Utilities
   - tqdm>=4.64.0
@@ -38,6 +34,11 @@ dependencies:
   # Pip packages
   - pip
   - pip:
+    # CRITICAL: transformers version must be <4.30.0 for compatibility
+    # Newer versions changed GenerationMixin import path
+    - transformers>=4.21.0,<4.30.0
+    - sentencepiece>=0.1.96
+    - tokenizers>=0.12.0,<0.14.0
     # OpenAI CLIP (must install from git)
     - git+https://github.com/openai/CLIP.git
     # Additional packages

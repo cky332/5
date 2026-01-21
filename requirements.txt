@@ -1,22 +1,38 @@
 # VIP5 Project Requirements
 # Install with: pip install -r requirements.txt
 
-# PyTorch (install separately based on your CUDA version)
+# ============================================================
+# IMPORTANT VERSION NOTES:
+# - PyTorch 1.12.x is required (NOT 2.x)
+# - transformers must be <4.30.0 (newer versions break imports)
+# ============================================================
+
+# PyTorch (install FIRST, separately based on your CUDA version)
 # See: https://pytorch.org/get-started/locally/
-# Example: pip install torch==1.12.0+cu113 torchvision==0.13.0+cu113 -f https://download.pytorch.org/whl/torch_stable.html
-torch>=1.12.0
-torchvision>=0.13.0
+#
+# For CUDA 11.3:
+#   pip install torch==1.12.0+cu113 torchvision==0.13.0+cu113 -f https://download.pytorch.org/whl/torch_stable.html
+#
+# For CUDA 11.6:
+#   pip install torch==1.12.0+cu116 torchvision==0.13.0+cu116 -f https://download.pytorch.org/whl/torch_stable.html
+#
+# For CPU only:
+#   pip install torch==1.12.0 torchvision==0.13.0
+
+torch==1.12.0
+torchvision==0.13.0
 
 # NLP and Transformers
-transformers>=4.20.0
+# CRITICAL: transformers>=4.30 breaks this codebase (GenerationMixin import changed)
+transformers>=4.21.0,<4.30.0
 sentencepiece>=0.1.96
-tokenizers>=0.12.0
+tokenizers>=0.12.0,<0.14.0
 
 # OpenAI CLIP
 git+https://github.com/openai/CLIP.git
 
 # Core scientific packages
-numpy>=1.21.0
+numpy>=1.21.0,<1.24.0
 scipy>=1.7.0
 scikit-learn>=1.0.0
 
