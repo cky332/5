@@ -34,11 +34,13 @@ dependencies:
   # Pip packages
   - pip
   - pip:
-    # CRITICAL: transformers version must be <4.30.0 for compatibility
-    # Newer versions changed GenerationMixin import path
-    - transformers>=4.21.0,<4.30.0
+    # CRITICAL: transformers version must be <4.18.0 for compatibility
+    # - 4.18+ renamed T5DenseReluDense to T5DenseActDense
+    # - 4.30+ changed GenerationMixin import path
+    # Recommended: use 4.16.2 (tested and stable)
+    - transformers==4.16.2
     - sentencepiece>=0.1.96
-    - tokenizers>=0.12.0,<0.14.0
+    - tokenizers>=0.10.0,<0.12.0
     # OpenAI CLIP (must install from git)
     - git+https://github.com/openai/CLIP.git
     # Additional packages
