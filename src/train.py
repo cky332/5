@@ -137,6 +137,9 @@ class Trainer(TrainerBase):
                 epoch_results[loss_name] = 0.
                 epoch_results[f'{loss_name}_count'] = 0
 
+            # Gradient accumulation steps
+            grad_accum_steps = getattr(self.args, 'gradient_accumulation_steps', 1)
+
             for step_i, batch in enumerate(self.train_loader):
 
                 if self.args.fp16 and _use_native_amp:
@@ -153,6 +156,10 @@ class Trainer(TrainerBase):
 
                 loss = results['loss']
 
+                # Scale loss for gradient accumulation
+                if grad_accum_steps > 1:
+                    loss = loss / grad_accum_steps
+
                 if self.args.fp16 and _use_native_amp:
                     self.scaler.scale(loss).backward()
                 elif self.args.fp16 and _use_apex:
@@ -163,30 +170,31 @@ class Trainer(TrainerBase):
 
                 loss = loss.detach()
 
-                # Update Parameters
-                if self.args.clip_grad_norm > 0:
+                # Update Parameters only after accumulation steps
+                if (step_i + 1) % grad_accum_steps == 0:
+                    if self.args.clip_grad_norm > 0:
+                        if self.args.fp16 and _use_native_amp:
+                            self.scaler.unscale_(self.optim)
+                            torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.args.clip_grad_norm)
+                        elif self.args.fp16 and _use_apex:
+                            torch.nn.utils.clip_grad_norm_(amp.master_params(self.optim), self.args.clip_grad_norm)
+                        else:
+                            torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.args.clip_grad_norm)
+
                     if self.args.fp16 and _use_native_amp:
-                        self.scaler.unscale_(self.optim)
-                        torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.args.clip_grad_norm)
-                    elif self.args.fp16 and _use_apex:
-                        torch.nn.utils.clip_grad_norm_(amp.master_params(self.optim), self.args.clip_grad_norm)
+                        self.scaler.step(self.optim)
+                        self.scaler.update()
                     else:
-                        torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.args.clip_grad_norm)
+                        self.optim.step()
 
-                if self.args.fp16 and _use_native_amp:
-                    self.scaler.step(self.optim)
-                    self.scaler.update()
-                else:
-                    self.optim.step()
+                    if self.lr_scheduler:
+                        self.lr_scheduler.step()
 
-                if self.lr_scheduler:
-                    self.lr_scheduler.step()
+                    # Zero gradients after optimizer step
+                    for param in self.model.parameters():
+                        param.grad = None
 
-                # self.model.zero_grad()
-                for param in self.model.parameters():
-                    param.grad = None
-
-                global_step += 1
+                    global_step += 1
 
                 if self.lr_scheduler:
                     if version.parse(torch.__version__) >= version.parse("1.4"):
